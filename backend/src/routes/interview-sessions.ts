@@ -1,4 +1,4 @@
-import { Router } from 'express';
+ import { Router } from 'express';
 import { prisma } from '../db';
 import { z } from 'zod';
 import { requireAuth, AuthedRequest } from '../middleware/auth';
@@ -117,5 +117,34 @@ router.get('/:id/summary', requireAuth, async (req: AuthedRequest, res) => {
     feedbackCount: s.feedbacks.length
   });
 });
+
+// >>> ADDED: Analytics endpoint (owner or ADMIN)
+router.get('/:id/analytics', requireAuth, async (req: AuthedRequest, res) => {
+  const s = await prisma.interviewSession.findUnique({
+    where: { id: req.params.id },
+    select: { id: true, candidateId: true, startedAt: true, completedAt: true }
+  });
+  if (!s) return res.status(404).json({ error: 'session not found' });
+  if (req.user!.role !== 'ADMIN' && s.candidateId !== req.user!.id) {
+    return res.status(403).json({ error: 'forbidden' });
+  }
+
+  const [questionCount, answers] = await Promise.all([
+    prisma.question.count({ where: { sessionId: s.id } }),
+    prisma.answer.findMany({ where: { sessionId: s.id }, select: { transcript: true } })
+  ]);
+
+  const wordCount = (t: string) => (t?.trim().match(/[A-Za-zÀ-ÖØ-öø-ÿ0-9]+/g)?.length ?? 0);
+  const totalWords = answers.reduce((sum, a) => sum + wordCount(a.transcript), 0);
+  const avgAnswerLength = answers.length ? totalWords / answers.length : 0;
+
+  const endRef = s.completedAt ?? new Date();
+  const durationMinutes = s.startedAt
+    ? Math.max(0, Math.floor((endRef.getTime() - s.startedAt.getTime()) / 60000))
+    : 0;
+
+  res.json({ questionCount, avgAnswerLength, durationMinutes });
+});
+// <<< END ADDED
 
 export default router;

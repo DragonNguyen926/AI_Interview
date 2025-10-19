@@ -35,47 +35,47 @@ model User {
 
 /// One interview session per candidate run
 model InterviewSession {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  candidateId  String   @db.Uuid
-  candidate    User     @relation("UserInterviews", fields: [candidateId], references: [id])
-  status       String   @default("CREATED") // CREATED | IN_PROGRESS | COMPLETED | ABORTED
-  startedAt    DateTime?
-  completedAt  DateTime?
-  createdAt    DateTime @default(now())
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  candidateId String    @db.Uuid
+  candidate   User      @relation("UserInterviews", fields: [candidateId], references: [id])
+  status      String    @default("CREATED") // CREATED | IN_PROGRESS | COMPLETED | ABORTED
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
 
-  questions    Question[]
-  answers      Answer[]
-  feedbacks    Feedback[]
+  questions Question[]
+  answers   Answer[]
+  feedbacks Feedback[]
 }
 
 /// Questions asked during a session
 model Question {
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  sessionId  String   @db.Uuid
-  session    InterviewSession @relation(fields: [sessionId], references: [id])
-  ordinal    Int
-  text       String
-  createdAt  DateTime @default(now())
+  id        String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sessionId String           @db.Uuid
+  session   InterviewSession @relation(fields: [sessionId], references: [id])
+  ordinal   Int
+  text      String
+  createdAt DateTime         @default(now())
 
-  answers    Answer[]
+  answers Answer[]
 }
 
 model Answer {
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  sessionId  String   @db.Uuid
+  id         String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sessionId  String           @db.Uuid
   session    InterviewSession @relation(fields: [sessionId], references: [id])
-  questionId String   @db.Uuid
-  question   Question @relation(fields: [questionId], references: [id])
+  questionId String           @db.Uuid
+  question   Question         @relation(fields: [questionId], references: [id])
   transcript String
   aiJson     Json?
-  createdAt  DateTime @default(now())
+  createdAt  DateTime         @default(now())
 }
 
 model Feedback {
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  sessionId  String   @db.Uuid
-  session    InterviewSession @relation(fields: [sessionId], references: [id])
-  rubric     Json
-  summary    String
-  createdAt  DateTime @default(now())
+  id        String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sessionId String           @db.Uuid
+  session   InterviewSession @relation(fields: [sessionId], references: [id])
+  rubric    Json
+  summary   String
+  createdAt DateTime         @default(now())
 }
